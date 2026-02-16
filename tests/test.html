@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tests — Casino Slots (RNG + Paytable)</title>
+  <style>
+    body { font-family: ui-monospace, monospace; font-size: 14px; padding: 20px; max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 18px; }
+    .pass { color: #22c55e; }
+    .fail { color: #fb7185; }
+    .section { margin: 16px 0; }
+    pre { background: #111; color: #eee; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+    .count { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Tests — Casino Slots</h1>
+  <p>Pruebas console-based sin frameworks. RNG + Paytable.</p>
+  <p><small>Nota: abre con un servidor local (ej. <code>npx serve .</code>) para que los ES modules carguen.</small></p>
+  <div id="output"></div>
+
+  <script type="module">
+    import { createRng } from "../assets/js/core/rng.js";
+    import { calculatePayout } from "../assets/js/systems/paytable.js";
+
+    const pool = ["🍋", "🍒", "🔔", "🎰", "7️⃣", "🌟", "⭐"];
+    let passed = 0, failed = 0;
+    const out = document.getElementById("output");
+
+    function ok(cond, msg) {
+      if (cond) { passed++; append("✓ " + msg, "pass"); return true; }
+      failed++; append("✗ " + msg, "fail"); return false;
+    }
+    function append(html, cls = "") {
+      const p = document.createElement("p");
+      p.className = cls;
+      p.textContent = html;
+      out.appendChild(p);
+      console.log(html);
+    }
+    function section(title) {
+      const h = document.createElement("h2");
+      h.textContent = title;
+      h.style.fontSize = "14px";
+      h.style.marginTop = "16px";
+      out.appendChild(h);
+      console.log("\n--- " + title + " ---");
+    }
+
+    // --- RNG: misma seed → mismos resultados ---
+    section("RNG: misma seed → mismos resultados");
+
+    const seed = "abc123";
+    const rng1 = createRng(seed);
+    const seq1 = Array.from({ length: 20 }, () => rng1.pick(pool));
+
+    const rng2 = createRng(seed);
+    const seq2 = Array.from({ length: 20 }, () => rng2.pick(pool));
+
+    ok(
+      seq1.every((v, i) => v === seq2[i]),
+      "Misma seed produce la misma secuencia de 20 picks"
+    );
+
+    // Verificar que seed diferente da secuencia diferente
+    const rng3 = createRng("otra-seed");
+    const seq3 = Array.from({ length: 20 }, () => rng3.pick(pool));
+    ok(
+      !seq1.every((v, i) => v === seq3[i]),
+      "Seed diferente produce secuencia diferente"
+    );
+
+    // setSeed reproduce
+    const rng4 = createRng("x");
+    rng4.pick(pool); rng4.pick(pool);
+    rng4.setSeed(seed);
+    const seq4 = Array.from({ length: 20 }, () => rng4.pick(pool));
+    ok(
+      seq1.every((v, i) => v === seq4[i]),
+      "setSeed(seed) reproduce la secuencia desde el inicio"
+    );
+
+    // --- Paytable: calcula correctamente ---
+    section("Paytable: calcula correctamente");
+
+    const bet = 100;
+
+    // 3 iguales
+    let r = calculatePayout(["7️⃣", "7️⃣", "7️⃣"], bet);
+    ok(r.win === bet * 50 && r.freeSpinsTriggered === false, "3 Seven → bet×50");
+
+    r = calculatePayout(["🎰", "🎰", "🎰"], bet);
+    ok(r.win === bet * 25, "3 Bar → bet×25");
+
+    r = calculatePayout(["🍒", "🍒", "🍒"], bet);
+    ok(r.win === bet * 10, "3 Cherry → bet×10");
+
+    r = calculatePayout(["🔔", "🔔", "🔔"], bet);
+    ok(r.win === bet * 8, "3 Bell → bet×8");
+
+    r = calculatePayout(["🍋", "🍋", "🍋"], bet);
+    ok(r.win === bet * 5, "3 Lemon → bet×5");
+
+    // 2 iguales
+    r = calculatePayout(["🍒", "🍒", "🍋"], bet);
+    ok(r.win === bet * 2, "2 Cherry → bet×2");
+
+    // WILD sustituye
+    r = calculatePayout(["🌟", "🌟", "7️⃣"], bet);
+    ok(r.win === bet * 50, "WILD+WILD+Seven → 3 Seven → bet×50");
+
+    r = calculatePayout(["🍒", "🌟", "🍒"], bet);
+    ok(r.win === bet * 10, "Cherry+WILD+Cherry → 3 Cherry → bet×10");
+
+    // Scatter
+    r = calculatePayout(["⭐", "⭐", "🍋"], bet);
+    ok(r.win === bet * 2 && r.freeSpinsTriggered === false, "2 Scatter → bet×2, no free spins");
+
+    r = calculatePayout(["⭐", "⭐", "⭐"], bet);
+    ok(r.win === bet * 5 && r.freeSpinsTriggered === true, "3 Scatter → bet×5, free spins");
+
+    // Nada
+    r = calculatePayout(["🍋", "🔔", "🍒"], bet);
+    ok(r.win === 0 && r.wins.length === 0, "Lemon+Bell+Cherry → 0 win");
+
+    r = calculatePayout(["🌟", "🌟", "🌟"], bet);
+    ok(r.win === 0, "3 WILD solo → no paga");
+
+    // Resultado
+    section("Resultado");
+    append(`Pasaron: ${passed} | Fallaron: ${failed}`, failed ? "fail" : "pass");
+    if (failed) {
+      append("⚠ Hay fallos. Revisa la lógica.", "fail");
+    } else {
+      append("✅ Todos los tests pasaron.", "pass");
+    }
+  </script>
+</body>
+</html>

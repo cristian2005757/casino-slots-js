@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Casino Slots — Vanilla JS</title>
+  <meta name="description" content="Slot machine hecha con HTML/CSS/JS (ES Modules). Proyecto de portafolio." />
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <strong>Casino Slots</strong>
+        <small>Vanilla JS • ES Modules • Modular Architecture</small>
+      </div>
+    </div>
+
+    <div class="hint">
+      <span>SPACE = Spin</span>
+      <span>↑/↓ = Bet</span>
+      <span>A = Auto</span>
+      <span>R = Reset</span>
+      <span>M = Mute</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="panelHead">
+        <h1>Slot Machine</h1>
+        <p class="sub">
+          Animación suave, tabla de pagos, balance, auto-spin y RNG explícito (detalle pro).
+        </p>
+      </div>
+
+      <div class="machine">
+        <!-- REELS -->
+        <div class="left">
+          <div class="reels" aria-label="Slot reels">
+            <div class="reel" id="reel0">
+              <div class="strip" id="strip0"></div>
+            </div>
+            <div class="reel" id="reel1">
+              <div class="strip" id="strip1"></div>
+            </div>
+            <div class="reel" id="reel2">
+              <div class="strip" id="strip2"></div>
+            </div>
+
+            <div class="payline" aria-hidden="true"></div>
+          </div>
+
+          <div class="infoRow">
+            <div class="msg" id="message">Listo ✅ Presiona <b>SPIN</b> o <b>SPACE</b>.</div>
+
+            <div class="fairness">
+              <div class="fairTitle">RNG (Fairness)</div>
+              <div class="fairData">
+                <div class="fairRow"><span class="fairLabel">Seed:</span><code id="fairnessSeed">—</code></div>
+                <div class="fairRow"><span class="fairLabel">Spin #:</span><span id="fairnessSpin">0</span></div>
+                <div class="fairRow"><span class="fairLabel">Resultado:</span><span id="fairnessResult" class="fairResult">—</span></div>
+              </div>
+              <div class="fairBtns">
+                <button class="linkBtn" id="btnNewSeed" type="button" aria-label="Generar nueva seed para RNG">Nueva seed</button>
+                <button class="linkBtn" id="btnCopyProof" type="button" aria-label="Copiar prueba de fairness (seed, spin, resultado)">Copiar prueba</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <aside class="controls">
+          <div class="stats">
+            <div class="stat" id="statFreeSpins" style="display:none">
+              <span class="label">Free Spins</span>
+              <span class="value" id="freeSpinsCount">0</span>
+            </div>
+            <div class="stat">
+              <span class="label">Balance</span>
+              <span class="value" id="balance">$ 0</span>
+            </div>
+            <div class="stat">
+              <span class="label">Apuesta</span>
+              <span class="value" id="bet">$ 0</span>
+            </div>
+            <div class="stat">
+              <span class="label">Último premio</span>
+              <span class="value" id="lastWin">$ 0</span>
+            </div>
+          </div>
+
+          <div class="btnRow">
+            <button class="btn ghost" id="btnBetDown" type="button" aria-label="Bajar apuesta (atajo: Flecha abajo)">- Bet</button>
+            <button class="btn" id="btnSpin" type="button" aria-label="Girar (atajo: Espacio)">SPIN</button>
+            <button class="btn ghost" id="btnBetUp" type="button" aria-label="Subir apuesta (atajo: Flecha arriba)">+ Bet</button>
+          </div>
+
+          <div class="btnRow2">
+            <button class="btn ghost" id="btnAuto" type="button" aria-label="Auto-spin on/off (atajo: A)">Auto: OFF</button>
+            <button class="btn ghost" id="btnMute" type="button" aria-label="Silenciar sonido (atajo: M)">Mute</button>
+          </div>
+
+          <div class="paytable">
+            <div class="payHead">
+              <strong>Tabla de pagos</strong>
+              <button type="button" class="btnInfo" id="btnPaytableInfo" aria-label="Ver tabla de pagos completa" title="Ver tabla completa">ℹ️</button>
+            </div>
+            <div class="payList" id="paytableList"></div>
+          </div>
+
+          <div class="statsPanel collapsible">
+            <button type="button" class="statsPanelToggle" id="statsPanelToggle" aria-expanded="false" aria-label="Abrir o cerrar panel de estadísticas">
+              <span>Estadísticas</span>
+              <span class="statsPanelChevron">▾</span>
+            </button>
+            <div class="statsPanelBody" id="statsPanelBody">
+              <div class="stat"><span class="label">Spins totales</span><span class="value" id="statSpins">0</span></div>
+              <div class="stat"><span class="label">% victorias</span><span class="value" id="statWinrate">—</span></div>
+              <div class="stat"><span class="label">Ganancia total</span><span class="value" id="statTotalGain">$ 0</span></div>
+              <div class="stat"><span class="label">Pérdida total</span><span class="value" id="statTotalLoss">$ 0</span></div>
+              <div class="stat"><span class="label">Net</span><span class="value" id="statNet">$ 0</span></div>
+              <div class="stat"><span class="label">Mayor premio</span><span class="value" id="statBiggestWin">$ 0</span></div>
+              <div class="stat"><span class="label">Racha pérdidas</span><span class="value" id="statLossStreak">0</span></div>
+            </div>
+          </div>
+          <div class="footer">
+            <span>Built by <b>Cristian Alvarez</b></span>
+            <span class="sep">•</span>
+            <a href="#" id="btnReset" aria-label="Resetear juego (atajo: R)">Reset</a>
+            <span class="sep">•</span>
+            <button type="button" class="linkBtn" id="btnResetData" aria-label="Borrar todos los datos guardados">Reset data</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Paytable -->
+  <div class="modal" id="paytableModal" role="dialog" aria-labelledby="modalTitle">
+    <div class="modalOverlay"></div>
+    <div class="modalContent">
+      <div class="modalHead">
+        <h2 id="modalTitle">Tabla de pagos completa</h2>
+        <button type="button" class="modalClose" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modalBody" id="paytableModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast (mensajes breves) -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module" src="./assets/js/main.js"></script>
+</body>
+</html>
