@@ -8,7 +8,7 @@ Slot machine clásico de 3 carretes hecho con **Vanilla JavaScript** y **ES Modu
 
 ## 🌐 Demo
 
-> [Añade aquí el link de Vercel o tu deploy cuando lo subas]
+**[https://casino-slots-js.vercel.app](https://casino-slots-js.vercel.app)**
 
 ---
 
@@ -125,9 +125,3 @@ casino-slots-js/
 ## 👤 Autor
 
 **Cristian Alvarez**
-
----
-
-## 📄 Licencia
-
-MIT (o la que prefieras para portafolio)
